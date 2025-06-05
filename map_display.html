@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AeroGuard - Mapa de Tráfego Aéreo</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; } /* Para ocupar a tela toda */
+        #mapid { height: 100%; width: 100%; }
+        .aircraft-icon {
+            /* Ícone de avião simples (SVG em Base64) */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2h-3V7c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v7H6v2H3v2h2l1 3h12l1-3h2v-2zM12 7h4v7h-4V7z"/></svg>'); 
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 24px;
+            height: 24px;
+            display: block; /* Garante que o div se comporta como um bloco para o tamanho */
+            /* Opcional: Adicionar um pouco de margem para o tooltip não cobrir o ícone */
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="mapid"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // 1. Inicializar o Mapa
+        var map = L.map('mapid').setView([-7.23, -35.88], 10); // Ex: Campina Grande, Paraíba
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var aircraftMarkers = {}; // Objeto para armazenar os marcadores dos aviões
+
+        // 2. Função para buscar e atualizar dados dos aviões
+        function fetchAircraftData() {
+            // *** ATENÇÃO: A URL ABAIXO DEVE APONTAR PARA O SEU BACKEND FLASK/FASTAPI ***
+            // Ele deve estar rodando em paralelo para que o desktop app possa acessá-lo.
+            fetch('http://127.0.0.1:5000/aircraft_data') 
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(aircrafts => {
+                    var currentAircrafts = {};
+
+                    aircrafts.forEach(aircraft => {
+                        currentAircrafts[aircraft.icao24] = true; // Marcar como presente nesta atualização
+
+                        if (aircraftMarkers[aircraft.icao24]) {
+                            // Avião já existe, atualizar posição
+                            var newLatLng = L.latLng(aircraft.latitude, aircraft.longitude);
+                            aircraftMarkers[aircraft.icao24].setLatLng(newLatLng);
+                            // Opcional: Atualizar a rotação do ícone
+                            if (aircraft.true_track !== null) {
+                                // Aplicar a rotação ao elemento pai do ícone se o ícone for um divIcon
+                                const iconElement = aircraftMarkers[aircraft.icao24].getElement();
+                                if (iconElement) {
+                                    iconElement.style.transform = `rotate(${aircraft.true_track}deg)`;
+                                }
+                            }
+                        } else {
+                            // Novo avião, criar marcador
+                            var icon = L.divIcon({
+                                className: 'aircraft-icon',
+                                iconSize: [24, 24]
+                            });
+                            var marker = L.marker([aircraft.latitude, aircraft.longitude], { icon: icon }).addTo(map)
+                                .bindPopup(`<b>${aircraft.callsign}</b><br>ICAO24: ${aircraft.icao24}`);
+                            
+                            // Definir rotação inicial
+                            const markerElement = marker.getElement();
+                            if (aircraft.true_track !== null && markerElement) {
+                                markerElement.style.transform = `rotate(${aircraft.true_track}deg)`;
+                            }
+                            aircraftMarkers[aircraft.icao24] = marker;
+                        }
+                    });
+
+                    // Remover aviões que não estão mais nos dados
+                    for (var icao24 in aircraftMarkers) {
+                        if (!currentAircrafts[icao24]) {
+                            map.removeLayer(aircraftMarkers[icao24]);
+                            delete aircraftMarkers[icao24];
+                        }
+                    }
+                })
+                .catch(error => console.error('Erro ao buscar dados dos aviões:', error));
+        }
+
+        // 3. Chamar a função de atualização periodicamente
+        // Esta função será executada pelo JavaScript dentro do QWebEngineView
+        setInterval(fetchAircraftData, 5000); // Atualiza a cada 5 segundos
+        fetchAircraftData(); // Chama uma vez ao carregar a página
+    </script>
+</body>
+</html>
