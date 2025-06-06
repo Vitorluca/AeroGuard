@@ -2,7 +2,8 @@
 from flask import Flask, jsonify
 import requests
 
-app = Flask(__name__)
+# app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 # Suas coordenadas de área de interesse (min_latitude, max_latitude, min_longitude, max_longitude)
 BOUNDING_BOX = "LAT_MIN,LAT_MAX,LON_MIN,LON_MAX" # Substitua pelos seus valores
