@@ -12,15 +12,19 @@ app = Flask(__name__, static_folder='static')
 CORS(app) 
 
 # Suas coordenadas de área de interesse (min_latitude, max_latitude, min_longitude, max_longitude)
-BOUNDING_BOX = "-10.0,-5.0,-40.0,-35.0" # Exemplo: Uma área abrangente na PB/RN. Adapte a sua!
+# BOUNDING_BOX = "-10.0,-5.0,-40.0,-35.0" # Exemplo: Uma área abrangente na PB/RN. Adapte a sua!
+# BOUNDING_BOX = "-23.612701, -23.637995,-46.654739,-46.674259" # São paulo/Rio de Janeiro
+BOUNDING_BOX = "-16.19,-27.333,-52.36,-44.736" #-16.19, -52.36     -27.333, -44.736
 
 @app.route('/aircraft_data')
 def get_aircraft_data():
     url = f"https://opensky-network.org/api/states/all?lamin={BOUNDING_BOX.split(',')[0]}&lomin={BOUNDING_BOX.split(',')[2]}&lamax={BOUNDING_BOX.split(',')[1]}&lomax={BOUNDING_BOX.split(',')[3]}"
+    print(f"Chamando OpenSky API com URL: {url}")
     try:
         response = requests.get(url)
         response.raise_for_status() 
         data = response.json()
+        print(f"Resposta bruta da OpenSky API: {raw_data}")
         
         aircraft_list = []
         if data and 'states' in data and data['states']:
