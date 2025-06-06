@@ -21,7 +21,8 @@ class AeroGuardWindow(QMainWindow):
         # Carrega o arquivo HTML local
         # Certifique-se de que 'map_display.html' está na mesma pasta que este script
         current_dir = sys.path[0] # Pega o diretório atual do script
-        html_file_path = f"file:///{current_dir}/map_display.html"
+        # html_file_path = f"file:///{current_dir}/map_display.html"
+        html_file_path = f"file:///{current_dir}/static/map_display.html"
         self.browser.setUrl(QUrl(html_file_path))
         
         layout.addWidget(self.browser)
