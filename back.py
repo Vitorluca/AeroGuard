@@ -1,11 +1,9 @@
-# backend_app.py
-
-from flask import Flask, jsonify
+# back.py
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
-import os  # Importe a biblioteca 'os'
-from dotenv import load_dotenv  # Importe a função 'load_dotenv'
-from flask import send_from_directory
+import os
+from dotenv import load_dotenv
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -14,60 +12,99 @@ app = Flask(__name__)
 CORS(app)
 
 # Pega as credenciais do ambiente
-# A função os.getenv() lê as variáveis que carregamos com load_dotenv()
-OPENSKY_USER = os.getenv('OPENSKY_USERNAME')
-OPENSKY_PASS = os.getenv('OPENSKY_PASSWORD')
+CLIENT_ID = os.getenv('OPENSKY_USERNAME') # Usando a mesma variável do .env
+CLIENT_SECRET = os.getenv('OPENSKY_PASSWORD') # Usando a mesma variável do .env
 
-print(f"--- DEBUG ---")
-print(f"Usuário carregado do .env: '{OPENSKY_USER}'")
-print(f"Senha carregada do .env: '{OPENSKY_PASS}'")
-print(f"-------------")
+# print("--------DEBUG--------")
+# print(f"CLIENT_ID: {CLIENT_ID}")
+# print(f"CLIENT_SECRET: {CLIENT_SECRET}")
+# print("---------------------")
 
-# Suas coordenadas
-BOUNDING_BOX = "-27.333,-16.19,-52.36,-44.736" # lamax,lamin,lomax,lomin (invertido na sua pergunta anterior)
-# Corrigindo a ordem para a URL: lamin,lamax,lomin,lomax
-LAMIN, LAMAX, LOMIN, LOMAX = "-27.333" ,"-16.19" , "-52.36", "-44.736" # Note a inversão aqui para o URL estar correto
-# A sua bounding box estava invertida (min > max). Corrigi para um exemplo válido sobre o Brasil.
-# Exemplo para o sudeste do Brasil: LAMIN, LAMAX, LOMIN, LOMAX = "-25.0", "-22.0", "-48.0", "-42.0"
+# CLIENT_ID = "bingosky-api-client"
+# CLIENT_SECRET = "fHJdTfcRExSpx10alZQ5YfaMWRG7Peex"
+
+
+# --- FASE 1: FUNÇÃO PARA OBTER O TOKEN DE ACESSO ---
+def get_opensky_token():
+    """Pede um novo Access Token para a API de autenticação da OpenSky."""
+    
+    auth_url = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token"
+    
+    payload = {
+        'grant_type': 'client_credentials',
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET
+    }
+    
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+    
+    try:
+        print("--- Obtendo novo Access Token da OpenSky ---")
+        response = requests.post(auth_url, data=payload, headers=headers)
+        response.raise_for_status()  # Lança um erro se a requisição falhar (ex: 401)
+        
+        token_data = response.json()
+        access_token = token_data.get('access_token')
+        
+        if not access_token:
+            print("ERRO: Access Token não encontrado na resposta.")
+            return None
+            
+        print("--- Access Token obtido com sucesso! ---")
+        return access_token
+
+    except requests.exceptions.HTTPError as e:
+        print(f"ERRO DE AUTENTICAÇÃO ao obter o token: {e.response.status_code}")
+        print(f"Resposta do servidor: {e.response.text}")
+        return None
+    except Exception as e:
+        print(f"ERRO inesperado ao obter o token: {e}")
+        return None
+
+# --- VARIÁVEL GLOBAL PARA ARMAZENAR O TOKEN ---
+# Obtemos o token uma vez quando o servidor inicia.
+# (Uma implementação mais avançada poderia verificar se o token expirou e pedir um novo)
+ACCESS_TOKEN = get_opensky_token()
 
 @app.route('/')
 def serve_index():
-    # Esta linha diz ao Flask para enviar o arquivo 'index.html'
-    # que está no mesmo diretório que o script 'back.py'
     return send_from_directory('static', 'map_display.html')
 
+# --- FASE 2: USAR O TOKEN PARA BUSCAR OS DADOS DOS AVIÕES ---
 @app.route('/aircraft_data')
 def get_aircraft_data():
-    url = f"https://opensky-network.org/api/states/all?lamin={LAMIN}&lomin={LOMIN}&lamax={LAMAX}&lomax={LOMAX}"
+    if not ACCESS_TOKEN:
+        # Se não conseguimos o token na inicialização, retorna um erro.
+        return jsonify({"error": "Falha na autenticação com a OpenSky. Verifique as credenciais."}), 500
+
+    # Coordenadas da sua área de interesse (min lat, max lat, min lon, max lon)
+    BBOX = "lamin=-27.333&lomin=-52.36&lamax=-16.19&lomax=-44.736" # Exemplo, ajuste para sua área
+    data_url = f"https://opensky-network.org/api/states/all?{BBOX}"
+    
+    # O token é enviado no cabeçalho "Authorization" como um "Bearer Token"
+    headers = {
+        'Authorization': f'Bearer {ACCESS_TOKEN}'
+    }
     
     try:
-        print("Fazendo requisição autenticada para a OpenSky API...")
+        print("Buscando dados dos aviões com o Access Token...")
+        response = requests.get(data_url, headers=headers)
+        response.raise_for_status() # Lança erro para status 4xx/5xx
         
-        # A biblioteca 'requests' usa o parâmetro 'auth' para fazer a autenticação HTTP Basic
-        response = requests.get(url, auth=(OPENSKY_USER, OPENSKY_PASS), timeout=15)
-        
-        response.raise_for_status()
         data = response.json()
-        
-        aircraft_list = []
-        if data and 'states' in data and data['states']:
-            for s in data['states']:
-                if s[5] is not None and s[6] is not None:
-                    aircraft_list.append({
-                        'icao24': s[0],
-                        'callsign': s[1].strip() if s[1] else 'N/A',
-                        'latitude': s[6],   # Corrigido: OpenSky retorna lon, lat
-                        'longitude': s[5], # Corrigido: OpenSky retorna lon, lat
-                        'true_track': s[10]
-                    })
-        return jsonify(aircraft_list)
+        # ... (processamento do JSON como fazíamos antes) ...
+        return jsonify(data) # Apenas retornando o JSON bruto por enquanto
 
-    except requests.exceptions.RequestException as e:
-        print(f"Erro na requisição para a API OpenSky: {e}")
-        return jsonify({"error": str(e)}), 500
+    except requests.exceptions.HTTPError as e:
+        # Se o token expirou, poderíamos receber um 401 aqui.
+        print(f"Erro ao buscar dados dos aviões: {e.response.status_code}")
+        # Aqui poderíamos tentar obter um novo token, mas por enquanto vamos simplificar.
+        return jsonify({"error": str(e)}), e.response.status_code
     except Exception as e:
-        print(f"Ocorreu um erro inesperado no servidor: {e}")
-        return jsonify({"error": "Erro interno no servidor"}), 500
+        print(f"Erro inesperado ao buscar dados: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
