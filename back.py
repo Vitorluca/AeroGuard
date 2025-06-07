@@ -72,35 +72,60 @@ ACCESS_TOKEN = get_opensky_token()
 def serve_index():
     return send_from_directory('static', 'map_display.html')
 
+#  BBOX = "lamin=-27.333&lomin=-52.36&lamax=-16.19&lomax=-44.736"
+
 # --- FASE 2: USAR O TOKEN PARA BUSCAR OS DADOS DOS AVIÕES ---
 @app.route('/aircraft_data')
 def get_aircraft_data():
     if not ACCESS_TOKEN:
-        # Se não conseguimos o token na inicialização, retorna um erro.
         return jsonify({"error": "Falha na autenticação com a OpenSky. Verifique as credenciais."}), 500
 
     # Coordenadas da sua área de interesse (min lat, max lat, min lon, max lon)
-    BBOX = "lamin=-27.333&lomin=-52.36&lamax=-16.19&lomax=-44.736" # Exemplo, ajuste para sua área
-    data_url = f"https://opensky-network.org/api/states/all?{BBOX}"
+    BBOX_VALUES = (-27.333, -16.19, -52.36, -44.736) # Exemplo, ajuste para sua área
+    data_url = "https://opensky-network.org/api/states/all"
     
-    # O token é enviado no cabeçalho "Authorization" como um "Bearer Token"
+    params = {
+        'lamin': BBOX_VALUES[0],
+        'lamax': BBOX_VALUES[1],
+        'lomin': BBOX_VALUES[2],
+        'lomax': BBOX_VALUES[3]
+    }
+    
     headers = {
         'Authorization': f'Bearer {ACCESS_TOKEN}'
     }
     
     try:
         print("Buscando dados dos aviões com o Access Token...")
-        response = requests.get(data_url, headers=headers)
-        response.raise_for_status() # Lança erro para status 4xx/5xx
+        response = requests.get(data_url, headers=headers, params=params)
+        response.raise_for_status()
         
-        data = response.json()
-        # ... (processamento do JSON como fazíamos antes) ...
-        return jsonify(data) # Apenas retornando o JSON bruto por enquanto
+        raw_data = response.json()
+        
+        # --- ESTA É A PARTE CORRIGIDA ---
+        aircraft_list = []
+        # Verifica se a resposta contém a chave "states" e se ela não é nula
+        if raw_data and 'states' in raw_data and raw_data['states']:
+            for s in raw_data['states']:
+                # Mapeia os dados da lista para um objeto mais legível
+                aircraft_list.append({
+                    'icao24': s[0],
+                    'callsign': s[1].strip() if s[1] else 'N/A',
+                    'origin_country': s[2],
+                    'longitude': s[5], # Atenção: lon e lat podem vir em ordens diferentes dependendo da API
+                    'latitude': s[6],
+                    'baro_altitude': s[7],
+                    'on_ground': s[8],
+                    'velocity': s[9],
+                    'true_track': s[10], # Direção
+                    'vertical_rate': s[11]
+                })
+        
+        # Agora estamos retornando a LISTA processada, que o JavaScript espera
+        return jsonify(aircraft_list)
 
     except requests.exceptions.HTTPError as e:
-        # Se o token expirou, poderíamos receber um 401 aqui.
         print(f"Erro ao buscar dados dos aviões: {e.response.status_code}")
-        # Aqui poderíamos tentar obter um novo token, mas por enquanto vamos simplificar.
         return jsonify({"error": str(e)}), e.response.status_code
     except Exception as e:
         print(f"Erro inesperado ao buscar dados: {e}")
