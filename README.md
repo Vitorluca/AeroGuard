@@ -33,7 +33,7 @@ Siga os passos abaixo para configurar e rodar o AeroGuard em sua máquina local.
 
 * [Python 3.7+](https://www.python.org/downloads/)
 * [Git](https://git-scm.com/downloads)
-* Uma conta e credenciais de API do [OpenSky Network](https://opensky-network.org/apidoc/rest.html#authentication).
+* Uma conta e credenciais de API do [OpenSky Network](https://opensky-network.org/).
 
 #### 1. Clonar o Repositório
 
