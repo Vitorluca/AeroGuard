@@ -39,8 +39,8 @@ Siga os passos abaixo para configurar e rodar o AeroGuard em sua máquina local.
 
 Abra seu terminal ou prompt de comando e clone este repositório:
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO_GIT>
-cd <NOME_DA_PASTA_DO_PROJETO>
+git clone https://github.com/Vitorluca/AeroGuard.git
+cd AeroGuard
 ```
 
 #### 2. Criar e Ativar o Ambiente Virtual
