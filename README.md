@@ -21,9 +21,7 @@ A aplicação é construída com uma arquitetura cliente-servidor local:
 
 ### Demonstração
 
-*Aqui você pode colocar um print da sua aplicação funcionando.*
-
-![Imagem do AeroGuard em funcionamento](https://placehold.co/800x600/333/FFF?text=AeroGuard+em+A%C3%A7%C3%A3o)
+![Imagem do AeroGuard em funcionamento](aeroguard.png)
 
 ---
 
