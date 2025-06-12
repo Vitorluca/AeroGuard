@@ -107,6 +107,51 @@ A aplicação precisa que dois scripts sejam executados em paralelo: o backend p
 Uma janela do AeroGuard deve aparecer na sua tela, carregando o mapa e, em alguns segundos, exibindo os ícones das aeronaves.
 
 ---
+
+### Personalizando a Área e a Visualização do Mapa
+
+Você pode facilmente alterar a região geográfica monitorada e a visão padrão do mapa.
+
+#### 1. Alterar a Área de Busca de Aeronaves (Backend)
+
+Para mudar a área geográfica de onde os dados dos aviões são coletados, você precisa editar o "bounding box" (caixa delimitadora).
+
+* **Arquivo:** `back.py`
+* **Linha a ser modificada:84**
+
+```python
+# Coordenadas da sua área de interesse (min lat, max lat, min lon, max lon)
+BBOX_VALUES = (-27.333, -16.19, -52.36, -44.736) # Exemplo, ajuste para sua área
+```
+
+* **O que significa cada valor:**
+    * `lamin`: Latitude mínima (borda Sul)
+    * `lamax`: Latitude máxima (borda Norte)
+    * `lomin`: Longitude mínima (borda Oeste)
+    * `lomax`: Longitude máxima (borda Leste)
+
+Você pode usar ferramentas online como o [bboxfinder](http://bboxfinder.com/) para encontrar as coordenadas da sua área de interesse.
+
+#### 2. Alterar a Visão Inicial do Mapa (Frontend)
+
+Para mudar o ponto central e o nível de zoom que o mapa exibe ao ser carregado.
+
+* **Arquivo:** `static/map_display.html`
+* **Linha a ser modificada:31**
+
+```javascript
+var map = L.map('mapid').setView([-7.23, -35.88], 10); // Ex: Campina Grande, Paraíba
+```
+
+* **O que significa cada valor:**
+    * `[-7.23, -35.88]`: As coordenadas do centro do mapa, no formato `[latitude, longitude]`.
+    * `10`: O nível de zoom inicial (valores maiores aproximam mais).
+
+**Importante:** É recomendado que a visão inicial do mapa (`setView`) esteja coerente com a área de busca de dados (`BBOX_VALUES`) para uma melhor experiência.
+
+---
+
+---
 ### Estrutura do Projeto
 ```
 /seu-projeto/
