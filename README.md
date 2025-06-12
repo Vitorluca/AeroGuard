@@ -98,8 +98,7 @@ A aplicação precisa que dois scripts sejam executados em paralelo: o backend p
 1.  Abra um **novo** terminal (e ative o ambiente virtual novamente, se necessário).
 2.  Execute o script da interface gráfica PyQt5:
     ```bash
-    # Substitua 'seu_arquivo_pyqt.py' pelo nome real do seu arquivo com o código PyQt5
-    python seu_arquivo_pyqt.py 
+    python front.py 
     ```
 
 Uma janela do AeroGuard deve aparecer na sua tela, carregando o mapa e, em alguns segundos, exibindo os ícones das aeronaves.
@@ -115,7 +114,7 @@ Você pode facilmente alterar a região geográfica monitorada e a visão padrã
 Para mudar a área geográfica de onde os dados dos aviões são coletados, você precisa editar o "bounding box" (caixa delimitadora).
 
 * **Arquivo:** `back.py`
-* **Linha a ser modificada:84**
+* **Linha a ser modificada: 84**
 
 ```python
 # Coordenadas da sua área de interesse (min lat, max lat, min lon, max lon)
@@ -135,10 +134,10 @@ Você pode usar ferramentas online como o [bboxfinder](http://bboxfinder.com/) p
 Para mudar o ponto central e o nível de zoom que o mapa exibe ao ser carregado.
 
 * **Arquivo:** `static/map_display.html`
-* **Linha a ser modificada:31**
+* **Linha a ser modificada: 31**
 
 ```javascript
-var map = L.map('mapid').setView([-7.23, -35.88], 10); // Ex: Campina Grande, Paraíba
+var map = L.map('mapid').setView([-23.572221, -46.630639], 10); // Ex: São Paulo, SP
 ```
 
 * **O que significa cada valor:**
