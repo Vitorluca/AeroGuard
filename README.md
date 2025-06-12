@@ -1,67 +1,118 @@
-# AeroGuard
+# AeroGuard - Monitor de Tráfego Aéreo
+
+AeroGuard é uma aplicação de desktop para visualização de tráfego aéreo em tempo real. Utilizando dados da API OpenSky Network, a ferramenta plota a posição das aeronaves em uma área geográfica específica sobre um mapa interativo, atualizando suas posições periodicamente.
+
+A aplicação é construída com uma arquitetura cliente-servidor local:
+* **Backend:** Um servidor Flask (Python) responsável por se autenticar na API da OpenSky, buscar os dados das aeronaves e fornecê-los através de um endpoint local.
+* **Frontend:** Uma interface de mapa construída com HTML, CSS e Leaflet.js.
+* **Container Desktop:** Uma janela de aplicação PyQt5 (Python) que encapsula e exibe o frontend, proporcionando uma experiência de aplicativo nativo.
 
 ---
 
-## 🚀 Visão Geral do Projeto
+### Funcionalidades
 
-O **AeroGuard** é um sistema inovador desenvolvido para monitorar o tráfego aéreo em uma área geográfica específica. Utilizando dados em tempo real da [API OpenSky](https://opensky-network.org/apidoc/rest.html), o sistema identifica quando aeronaves entram ou saem da área monitorada e emite alertas instantâneos, garantindo maior consciência situacional sobre o espaço aéreo definido.
-
----
-
-## ✨ Recursos Principais
-
-* **Monitoramento de Área Específica:** Defina uma ou mais áreas geográficas para vigilância.
-* **Detecção de Aeronaves em Tempo Real:** Identifica a presença de aeronaves dentro das zonas monitoradas.
-* **Alertas Instantâneos:** Notificações automáticas ao detectar movimentos de aeronaves.
-* **Integração com OpenSky API:** Utiliza dados de voo globais para precisão e abrangência.
+* **Visualização em Tempo Real:** Acompanhe a movimentação de aeronaves em um mapa interativo.
+* **Dados Detalhados:** Ao clicar em uma aeronave, veja informações como o código de chamada (callsign) e o ICAO24.
+* **Rotação dos Ícones:** Os ícones das aeronaves giram para indicar a direção do voo (proa).
+* **Área de Cobertura Específica:** Monitora uma área geográfica pré-definida (Bounding Box).
+* **Interface Limpa:** Foco total no mapa para uma visualização sem distrações.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+### Demonstração
 
-* **Python** (ou outra linguagem que for usar)
-* **OpenSky Network API**
-* (Outras bibliotecas/frameworks que você planeja usar, por exemplo, para persistência de dados ou envio de alertas - Flask, FastAPI, psycopg2, etc.)
+*Aqui você pode colocar um print da sua aplicação funcionando.*
+
+![Imagem do AeroGuard em funcionamento](https://placehold.co/800x600/333/FFF?text=AeroGuard+em+A%C3%A7%C3%A3o)
 
 ---
 
-## ⚙️ Como Configurar e Rodar
+### Como Executar o Projeto
 
-Siga os passos abaixo para configurar e executar o **AeroGuard** localmente.
+Siga os passos abaixo para configurar e rodar o AeroGuard em sua máquina local.
 
-1.  **Clone o Repositório:**
+#### Pré-requisitos
+
+* [Python 3.7+](https://www.python.org/downloads/)
+* [Git](https://git-scm.com/downloads)
+* Uma conta e credenciais de API do [OpenSky Network](https://opensky-network.org/apidoc/rest.html#authentication).
+
+#### 1. Clonar o Repositório
+
+Abra seu terminal ou prompt de comando e clone este repositório:
+```bash
+git clone <URL_DO_SEU_REPOSITORIO_GIT>
+cd <NOME_DA_PASTA_DO_PROJETO>
+```
+
+#### 2. Criar e Ativar o Ambiente Virtual
+
+É uma boa prática usar um ambiente virtual para isolar as dependências do projeto.
+
+**No Windows:**
+```bash
+python -m venv venv
+.\venv\Scripts\activate
+```
+
+**No macOS / Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+*(Seu prompt de comando deve mudar para indicar que o ambiente `venv` está ativo).*
+
+#### 3. Configurar as Credenciais da OpenSky
+
+A aplicação precisa das suas credenciais para acessar a API da OpenSky.
+
+1.  Na pasta raiz do projeto, crie um arquivo chamado `.env`.
+2.  Abra o arquivo `.env` e adicione suas credenciais no seguinte formato:
+
+```ini
+# Substitua 'seu_usuario' e 'sua_senha' pelas suas credenciais reais da OpenSky
+OPENSKY_USERNAME="seu_usuario_aqui"
+OPENSKY_PASSWORD="sua_senha_aqui"
+```
+
+#### 4. Instalar as Dependências
+
+Com o ambiente virtual ativo, instale todas as bibliotecas Python necessárias usando o arquivo `requirements.txt`.
+```bash
+pip install -r requirements.txt
+```
+
+#### 5. Executar a Aplicação
+
+A aplicação precisa que dois scripts sejam executados em paralelo: o backend primeiro, e depois a interface gráfica.
+
+**Passo 1: Rodar o Backend (`back.py`)**
+
+1.  Abra um terminal (com o ambiente virtual ativo).
+2.  Execute o servidor Flask:
     ```bash
-    git clone [https://github.com/SeuUsuario/AeroGuard.git](https://github.com/SeuUsuario/AeroGuard.git)
-    cd AeroGuard
+    python back.py
     ```
-2.  **Instale as Dependências:**
+3.  O terminal deverá exibir uma mensagem indicando que o servidor está rodando em `http://127.0.0.1:5000`. **Deixe este terminal aberto.**
+
+**Passo 2: Rodar a Interface Gráfica**
+
+1.  Abra um **novo** terminal (e ative o ambiente virtual novamente, se necessário).
+2.  Execute o script da interface gráfica PyQt5:
     ```bash
-    pip install -r requirements.txt
+    # Substitua 'seu_arquivo_pyqt.py' pelo nome real do seu arquivo com o código PyQt5
+    python seu_arquivo_pyqt.py 
     ```
-    *(Crie um arquivo `requirements.txt` com as dependências do seu projeto, como `requests` para chamadas à API.)*
-3.  **Configuração da API OpenSky:**
-    * Obtenha suas credenciais da OpenSky Network, se necessário para acesso estendido.
-    * Crie um arquivo de configuração (ex: `.env` ou `config.py`) para armazenar chaves de API e a definição da área a ser monitorada (latitude/longitude, raio, etc.).
 
-4.  **Defina a Área de Monitoramento:**
-    * Ajuste as coordenadas geográficas (latitude, longitude) e o raio da área de interesse no arquivo de configuração.
-
-5.  **Execute o Sistema:**
-    ```bash
-    python main.py
-    ```
-    *(Assumindo que `main.py` é o seu arquivo principal.)*
+Uma janela do AeroGuard deve aparecer na sua tela, carregando o mapa e, em alguns segundos, exibindo os ícones das aeronaves.
 
 ---
-
-## 🤝 Contribuição
-
-Contribuições são muito bem-vindas! Se você tiver sugestões, melhorias ou encontrar bugs, por favor, abra uma *issue* ou envie um *pull request*.
-
----
-
-## 📄 Licença
-
-Este projeto está licenciado sob a Licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
----
+### Estrutura do Projeto
+```
+/seu-projeto/
+├── .env                  # Suas credenciais da API (CRIAR MANUALMENTE)
+├── back.py               # Servidor Backend Flask
+├── seu_arquivo_pyqt.py   # Interface Gráfica Desktop
+├── requirements.txt      # Dependências Python
+└── static/
+    └── map_display.html  # Frontend com o mapa Leaflet
