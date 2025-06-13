@@ -154,7 +154,7 @@ var map = L.map('mapid').setView([-23.572221, -46.630639], 10); // Ex: São Paul
 /seu-projeto/
 ├── .env                  # Suas credenciais da API (CRIAR MANUALMENTE)
 ├── back.py               # Servidor Backend Flask
-├── seu_arquivo_pyqt.py   # Interface Gráfica Desktop
+├── front.py              # Interface Gráfica Desktop
 ├── requirements.txt      # Dependências Python
 └── static/
     └── map_display.html  # Frontend com o mapa Leaflet
